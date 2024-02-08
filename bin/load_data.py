@@ -26,13 +26,13 @@ def loadNames(spark):
     # print(df.count())
     # df.printSchema()
     # df.show()
-    df.show()
+    # df.show()
     df = df.withColumnRenamed("Child's First Name" , "FirstName")\
         .withColumn("GenderTemp" , when(col('Gender')=='MALE' , "M" ).otherwise("F"))\
         .drop('Gender')\
         .withColumnRenamed("GenderTemp" , "Gender")
 
-    df.show()
+    # df.show()
 
     df2 = spark.read.option('header',True).option('inferSchema',True).csv('./data/firstnames.csv')
     df2 = df2.select('name','sex')
@@ -43,15 +43,16 @@ def loadNames(spark):
         .withColumn("GenderTemp" , when(col('sex')=='boy' , "M" ).otherwise("F"))\
         .drop('sex')\
         .withColumnRenamed("GenderTemp" , "Gender")
-    df2.show()
+    # df2.show()
 
     finalDF = df.union(df2)
     finalDF = finalDF.distinct()
-    finalDF.show(35)
-    print(finalDF.count())
+    # finalDF.show(35)
+    # print(finalDF.count())
     # finalDF = finalDF.sample(0.05 , 3)
     # print(finalDF.count())
     # writeIntoFile(spark,finalDF,'./data/loadData',format='parquet')
+    return finalDF
 
 def loadCovidData(spark):
     df = spark.read.option('header',True).option('inferSchema',True).csv('./data/location-data.csv')
@@ -81,7 +82,11 @@ def loadCovidData(spark):
     filtered_data = filtered_data.withColumn('total_deaths2' , col('total_deaths').cast('bigint'))\
         .drop('total_deaths')\
         .withColumnRenamed('total_deaths2' , 'total_deaths')
-    
-    filtered_data.show(truncate=False)
+    # reducing the number of cases / country for ease of use 
+    filtered_data = filtered_data.withColumn('reduced_cases' , col('total_cases').cast('float')%35)
+    filtered_data.show()
+
+    # filtered_data.show(truncate=False)
     filtered_data.printSchema()
-    print(filtered_data.count())
+    # print(filtered_data.count())
+    return filtered_data
