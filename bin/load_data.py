@@ -15,9 +15,9 @@ from helpers import *
 
 def loadNames(spark):
     print('Read usernames : ')
-    spark = SparkSession.builder.master('local[2]').appName('Covid-dummy').getOrCreate()
-    sc = spark.sparkContext
-    sc.setLogLevel('ERROR')
+    # spark = SparkSession.builder.master('local[2]').appName('Covid-dummy').getOrCreate()
+    # sc = spark.sparkContext
+    # sc.setLogLevel('ERROR')
     df = spark.read.option('header',True).option('inferSchema',True).csv('./data/names.csv')
     df = df.select("Child's First Name",'Gender')
     # print(df.count())

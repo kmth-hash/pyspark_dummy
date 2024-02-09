@@ -16,3 +16,12 @@ def writeIntoFile(spark, df, filename='finalDF', location='/', format='csv', pri
     if printFlag:
         df.show(10, truncate=False)
     print(f' writing {filename} : complete')
+
+
+def readFromFile(spark , filename='' , location='/data/' , format='csv'):
+    if filename=='':
+        print('Filename missing : ')
+        return 
+    df = spark.read.option('header',True).option('inferSchema',True).csv(f'{location}{filename}.{format}')
+    return df 
+
