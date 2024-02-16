@@ -3,7 +3,7 @@ def writeIntoFile(spark, df, filename='finalDF', location='/', format='csv', pri
     format = format.lower()
     # df.write.mode('overwrite').option('delimiter','|').option('header',True).format(format).load(f'/finalNamesDF.{format}')
 
-    if format == 'parquet':
+    if format == 'csv':
 
         df.write.mode('overwrite').option(
             'delimiter', '|').option('header', True).csv(filename)

@@ -56,6 +56,8 @@ def main_meth():
     
     sourceData = names.crossJoin(covidmap)
     # sourceData.show()
+    sourceData = sourceData.repartition(10)
+    
     writeIntoFile(spark , sourceData , filename='sourceData',format='csv')
     # print(sourceData.count())
 
