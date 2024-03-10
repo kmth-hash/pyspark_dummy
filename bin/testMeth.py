@@ -26,7 +26,7 @@ def filterNames(s):
         # print(s.isascii())
         
         x = s.split(' ')[0]
-        if x.isascii():
+        if x.isalpha() and len(x)>2:
             return x
         else :
             return ''
@@ -42,11 +42,16 @@ def findMostNames(spark, filePath):
     df = spark.read.option('inferSchema',True).option('header',True).csv(filePath)
     df.show( truncate=False)
     return df
-
-def testMethodExec():
-    spark = initSpark()
     
+def readFilePipeDelimited(spark , filePath) :
+    df = spark.read.option('inferSchema',True).option('delimiter','|').option('header',True).csv(filePath)
+    df.show( truncate=False)
+    return df
+    
+def testMethodExec():
+    spark = initSpark()    
     return spark 
+    
 if __name__=='__main__':
     spark = testMethodExec()
     df = findMostNames(spark,'./data/indian-male-names.csv')
