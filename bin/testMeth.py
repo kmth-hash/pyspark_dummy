@@ -42,56 +42,92 @@ def findMostNames(spark, filePath):
     df = spark.read.option('inferSchema',True).option('header',True).csv(filePath)
     df.show( truncate=False)
     return df
-    
 def readFilePipeDelimited(spark , filePath) :
     df = spark.read.option('inferSchema',True).option('delimiter','|').option('header',True).csv(filePath)
     df.show( truncate=False)
     return df
-    
 def testMethodExec():
-    spark = initSpark()    
-    return spark 
+    spark = initSpark()
+    return spark
+
+def add_country(spark , filePath ):
+    df = spark.read.option('inferSchema',True).option('header',True).csv(filePath)
+    # df.show( truncate=False)
+    # print(df.count())
+    
+    # Some null values like continents 
+    # df2 = df.filter(df['continent'].isNull())
+    # df2.show()
+
+    df = df.filter(df['continent'].isNotNull())
+    df = df.withColumnRenamed('location' , 'country').select('continent' , 'country')
+    # print(df.count())
+    # df.show()
+    return df
     
 if __name__=='__main__':
     spark = testMethodExec()
     df = findMostNames(spark,'./data/indian-male-names.csv')
     df.printSchema()
     # df.show(30)
-    print(filterNames("_12_اف_"))
-    print(filterNames("James Ford"))
-    print(filterNames('कु0'))
-    print(filterNames(''))
+    # print(filterNames("_12_اف_"))
+    # print(filterNames("James Ford"))
+    # print(filterNames('कु0'))
+    # print(filterNames(''))
     # df2 = df.filter(df.name.isNull())
     # print(df2.count())
     # df2.show()
-    
+
     validateNameUDF = udf(lambda f : filterNames(f) , StringType())
     # df.show()
     # df.dropna()
     df = df.withColumn('firstName', when(df.name.isNull(),"").otherwise(validateNameUDF(df.name)) )
-    
+    df = df.withColumn('uppergender' , upper(df['gender']))
     # df.show(10)
-    df = df.dropna()
-    df = df.select('firstName','gender')
+    df = df.dropna('any')
+    df = df.select('firstName','uppergender')
 
     df2 = findMostNames(spark,'./data/indian-female-names.csv')
-    df2.printSchema()
     df2 = df2.withColumn('firstName', when(df2.name.isNull(),"").otherwise(validateNameUDF(df2.name)) )
-    df2 = df2.dropna()
-    df2 = df2.select('firstName','gender')
+    df2.printSchema()
+    df2.show()
+    df2 = df2.withColumn('uppergender' , upper(df2['gender']))
+    df2 = df2.dropna('any')
+    df2 = df2.select('firstName','uppergender')
 
-    df = df.union(df2)
-    print('Female count : ',df.filter(df.gender=='f').count())
-    print('Male count : ',df.filter(df.gender=='m').count())
-    
+    df3 = readFilePipeDelimited(spark,'./data/finalNamesDF.csv')
+    df3.printSchema()
+    df3 = df3.withColumn('firstName', when(df3.FirstName.isNull(),"").otherwise(validateNameUDF(df3.FirstName)) )
+    df3 = df3.withColumnRenamed('gender' , 'Gender')
+    df3 = df3.withColumn('uppergender' , upper(df3['gender']))
+    df3 = df3.dropna('any')
+    df3 = df3.select('firstName','uppergender')
+
+    df = df.union(df2).union(df3)
+    df = df.withColumnRenamed('uppergender' , 'gender')
+    print('Final DF ')
+    df.printSchema()
+    df.show()
+    print('Users : ', df.count())
+
+    locDF = add_country(spark , './data/location-data.csv')
+    print('Location dataset : ',locDF.count())
+
+    finalDF = df.crossJoin(locDF)
+    print(finalDF.count())
+
+    df=finalDF
+    # print('Female count : ',df.filter(df.gender=='F').count())
+    # print('Male count : ',df.filter(df.gender=='M').count())
+
 
     df = df.repartition(10)
     df = df.distinct()
-    print('Female count : ',df.filter(df.gender=='f').count())
-    print('Male count : ',df.filter(df.gender=='m').count())
-    
+    # print('Female count : ',df.filter(df.gender=='F').count())
+    # print('Male count : ',df.filter(df.gender=='M').count())
+
     df.show(50)
     df = df.coalesce(1)
-    df.write.mode('overwrite').option('delimiter', '|').option('header', True).csv('ind-names')
+    df.write.mode('overwrite').option('delimiter', '|').option('header', True).csv('loc-names')
 
     print('Write complete ')
