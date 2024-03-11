@@ -37,7 +37,16 @@ def filterNames(s):
         # print('False')
         return ''
     
-
+def addStatusAttrib(spark , df):
+    def getrandomStatus():
+        from random import choice 
+        x = choice(['Dead','Recovered','Infected'])
+        # print(x)
+        return x
+    statusUDF = udf(lambda  : getrandomStatus() , StringType())
+    df = df.withColumn('Status' , statusUDF())
+    df.show()
+    return df
 def findMostNames(spark, filePath):
     df = spark.read.option('inferSchema',True).option('header',True).csv(filePath)
     df.show( truncate=False)
@@ -68,6 +77,8 @@ def add_country(spark , filePath ):
 if __name__=='__main__':
     spark = testMethodExec()
     df = findMostNames(spark,'./data/indian-male-names.csv')
+
+    
     df.printSchema()
     # df.show(30)
     # print(filterNames("_12_اف_"))
@@ -105,6 +116,7 @@ if __name__=='__main__':
 
     df = df.union(df2).union(df3)
     df = df.withColumnRenamed('uppergender' , 'gender')
+    df = addStatusAttrib(spark , df)
     print('Final DF ')
     df.printSchema()
     df.show()
