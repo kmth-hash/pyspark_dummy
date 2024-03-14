@@ -2,16 +2,16 @@
 from time import sleep  
 from json import dumps  
 import csv
-from random import randint
+from random import randint , choice 
 from kafka import KafkaProducer
 
 def readData(filePath , kafkaProd ):
-    
+    statusList = ['Recovered','Dead','Infected']
     with open(filePath, mode ='r')as file:
         csvFile = csv.reader(file , delimiter='|')
         # return csvFile
         for i in csvFile:
-            sendData( [*i , 'src2'] , kafkaProd)
+            sendData( [*i , 'src2' , choice(statusList) ] , kafkaProd)
             
             sleep(1/randint(1,10))
 

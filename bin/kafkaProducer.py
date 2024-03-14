@@ -2,7 +2,7 @@
 from time import sleep  
 from json import dumps  
 import csv
-from random import randint
+from random import randint , choice 
 from kafka import KafkaProducer
 
 
@@ -17,12 +17,12 @@ from kafka import KafkaProducer
 #     print('Sent : ', my_data)  
 #     sleep(5) 
 def readData(filePath , kafkaProd ):
-    
+    statusList = ['Recovered','Dead','Infected']
     with open(filePath, mode ='r')as file:
         csvFile = csv.reader(file , delimiter='|')
         # return csvFile
         for i in csvFile:
-            sendData( [*i , 'src1'] , kafkaProd)
+            sendData( [*i , 'src1' , choice(statusList)] , kafkaProd)
             
             sleep(1/randint(1,10))
 
@@ -38,7 +38,7 @@ def main():
         value_serializer = lambda x:dumps(x).encode('utf-8')  
         )
     
-    readData('/home/ubuntu/prj/kafka_2.12-3.6.0/scripts/sourceData.csv',my_producer)
+    readData('/home/ubuntu/prj/kafka_2.12-3.6.0/scripts/sourceFileData4.csv',my_producer)
     
     
 main()
