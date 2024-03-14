@@ -10,8 +10,10 @@ findspark.init()
 
 from pyspark.sql import * 
 from pyspark.sql.functions import * 
+
 from pyspark.sql.types import StructField , StructType , StringType
 def receiveData(topic ):
+    # Package required for kafka to work 
     spark = SparkSession.builder.master('local[2]')\
         .config('spark.jars.packages','org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2')\
         .appName('CovidKafka').getOrCreate()
@@ -43,14 +45,38 @@ def receiveData(topic ):
         .load() 
     
     valDF = df.select(from_json(col('value').cast('string') , schema ).alias('srcValue')).select(col('srcValue.*'))
+    # valDF.printSchema()
+
+    # print(type(valDF))
+    # valDF = valDF.toDF(*sorted(valDF.columns))
+    # valDF.show(10)
+    valDF = valDF.withColumn('hdfsCol' , when(valDF.continent=='Asia','asi')\
+                              .when(valDF.continent=='Africa','afr')\
+                              .when(valDF.continent=='South America','sam')\
+                              .when(valDF.continent=='North America','nam')\
+                              .when(valDF.continent=='Africa','africa')\
+                              .when(valDF.continent=='Europe','eur'))
+    
+    # valDF = valDF.withColumn('hdfsCol' , when(valDF.continent=='Asia' , 'asi').when)
     valDF.printSchema()
 
-
+    # print(type(valDF))
     valDF.writeStream \
     .format('console')\
     .option('inferSchema','true')\
     .option('truncate','false')\
     .start()
+
+    d = open('/home/ubuntu/prj/kafka_2.12-3.6.0/output/testfile.csv' , 'w')
+    valDF.writeStream \
+    .format('csv')\
+    .option('path','/home/ubuntu/prj/kafka_2.12-3.6.0/output/asi')\
+    .option('checkpointLocation' ,d )\
+    .option('forceDeleteTempCheckpointLocation','false')\
+    .outputMode('append')\
+    .start()
+
+
     print('Done')
     spark.streams.awaitAnyTermination()
 
