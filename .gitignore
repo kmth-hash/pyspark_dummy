@@ -4,3 +4,4 @@ __pycache__
 dont-push.py 
 data/sourceFileData.csv
 sourceFileData.csv
+.env
