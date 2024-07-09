@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv 
 import json 
 import time 
+import sqlite3 
 
 
 currFilePath = os.path.abspath(__file__)
@@ -19,10 +20,23 @@ def streamReader(consumer, topicName) :
     consumer.subscribe(topics=[topicName])
     consumer.subscription()
 
+    conn = sqlite3.connect('test.db')
+    cursor = conn.cursor()
+    def initDB(cursor):
+        cursor.execute('select * from test ;')
+        result = cursor.fetchall()
+        print('print:',result)
+        cursor.execute('create table if not exists test (location string , temperature float , currenttime string,currendate string, humidity float);')
+    initDB(cursor)
     for message in consumer : 
         msgText = message.value 
-        print(msgText) 
-
+        jsonResponse = json.loads(msgText)
+        print(jsonResponse , type(jsonResponse))
+        # print(f'{str(jsonResponse['location'])}')
+        query = f"insert into test values('{str(jsonResponse['location'])}',{float(jsonResponse['temperature'])},'{str(jsonResponse['currenttime'])}','{str(jsonResponse['currentdate'])}',{float(jsonResponse['humidity'])})" 
+        print(query)
+        cursor.execute(query)
+        conn.commit()
 
 
 def main() : 
