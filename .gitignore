@@ -5,3 +5,5 @@ dont-push.py
 data/sourceFileData.csv
 sourceFileData.csv
 .env
+
+*.test.py
